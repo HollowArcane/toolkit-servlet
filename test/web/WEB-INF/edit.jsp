@@ -1,5 +1,6 @@
 <%@page import="model.Writer" %>
-<%@page import="static toolkit.http.ServletValidation.*" %>
+<%@page import="toolkit.http.Request" %>
+<%@page import="toolkit.util.Arrays" %>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -24,15 +25,26 @@
 </head>
 <body>
     <form action="/test/form" method="POST">
-        <p><%= error("first-name", "First Name") %></p>
-        <p> First Name <input value="<%= value("first-name").orElse("") %>" type="text" name="first-name"> </p>
-        <p><%= error("last-name", "Last Name") %></p>
-        <p> Last Name <input value="<%= value("last-name").orElse("") %>" type="text" name="last-name"> </p>
-        <p><%= error("gender", "Gender") %></p>
+        <% Request rq = new Request(request); %>
+
+        <p><%= rq.error("first-name", "First Name", "name") %></p>
+        <p> First Name <input value="<%= rq.value("first-name").orElse("") %>" type="text" name="first-name"> </p>
+        <p><%= rq.error("last-name", "Last Name", "name") %></p>
+        <p> Last Name <input value="<%= rq.value("last-name").orElse("") %>" type="text" name="last-name"> </p>
+        <p><%= rq.error("gender", "Gender", "gender") %></p>
         <p> Gender <select name="gender">
-            <option value="1" <%= "1".equals(value("gender").orElse("")) ? "selected": "" %>> Male </option>
-            <option value="0" <%= "0".equals(value("gender").orElse("")) ? "selected": "" %>> Female </option>
+            <option value="1" <%= "1".equals(rq.value("gender").orElse("")) ? "selected": "" %>> Male </option>
+            <option value="0" <%= "0".equals(rq.value("gender").orElse("")) ? "selected": "" %>> Female </option>
         </select> </p>
+
+        <p><%= rq.error("books[]", "Book", "book index") %></p>
+        <p> Books
+            <p> Book 1: <input type="checkbox" value="1" name="books[]" <%= Arrays.contains(rq.value(String[].class, "books[]").orElse(new String[0]), "1") ? "checked": "" %> /> </p>
+            <p> Book 2: <input type="checkbox" value="2" name="books[]" <%= Arrays.contains(rq.value(String[].class, "books[]").orElse(new String[0]), "2") ? "checked": "" %> /> </p>
+            <p> Book 3: <input type="checkbox" value="3" name="books[]" <%= Arrays.contains(rq.value(String[].class, "books[]").orElse(new String[0]), "3") ? "checked": "" %> /> </p>
+            <p> Book 4: <input type="checkbox" value="4" name="books[]" <%= Arrays.contains(rq.value(String[].class, "books[]").orElse(new String[0]), "4") ? "checked": "" %> /> </p>
+            <p> Book 5: <input type="checkbox" value="5" name="books[]" <%= Arrays.contains(rq.value(String[].class, "books[]").orElse(new String[0]), "5") ? "checked": "" %> /> </p>
+        </p>
         <button>Submit</button>
     </form>
 

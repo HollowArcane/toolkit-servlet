@@ -4,15 +4,15 @@ class ChartBuilderFactory
         'background': 'backgroundColor',
         'border': 'borderColor',
         'border-width': 'borderWidth',
-        'h:background': 'hoverBackgroundColor',
-        'h:border': 'hoverBorderColor',
-        'h:border-width': 'hoverBorderWidth',
+        'background:hover': 'hoverBackgroundColor',
+        'border:hover': 'hoverBorderColor',
+        'border-width:hover': 'hoverBorderWidth',
         'pt-background': 'pointBackgroundColor',
         'pt-border': 'pointBorderColor',
         'pt-border-width': 'pointBorderWidth',
-        'h:pt-background': 'pointHoverBackgroundColor',
-        'h:pt-border': 'pointHoverBorderColor',
-        'h:pt-border-width': 'pointHoverBorderWidth'
+        'pt-background:hover': 'pointHoverBackgroundColor',
+        'pt-border:hover': 'pointHoverBorderColor',
+        'pt-border-width:hover': 'pointHoverBorderWidth'
     }
 
     static createBuilder(chart)
@@ -152,6 +152,12 @@ class ChartBuilderFactory
 
 class ChartBuilder
 {
+    /**
+     * Create a new default chart builder of the specified type from the specified chart.
+     * @constructor
+     * @param {string} type - The type of the book.
+     * @param {Node} chart - The HTML node to create the chart from.
+     */
     constructor(type, chart)
     {
         this.type = type;
@@ -397,6 +403,7 @@ class PieChartBuilder extends ChartBuilder
     getPlugins()
     { return [ PieChartBuilder.PIE_IMAGE ]; }
 }
+
 
 window.addEventListener('load', () => {
     const charts = document.querySelectorAll('chart');

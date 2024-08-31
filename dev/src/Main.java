@@ -12,10 +12,11 @@ public class Main
         DateFormat format = Dates.YYYY_MM_DD;
 
         System.out.println(Arrays.join(
-            Dates.yearInterval(
+            Dates.interval(
                 format.parse("2024-01-23"),
-                format.parse("2023-12-20")
+                format.parse("2023-12-20"),
+                Dates.TimeUnit.YEAR
             ),
-        ", ", (_, d) -> format.format(d)));
+        ", ", Dates::format));
     }
 }

@@ -22,7 +22,7 @@ mkdir "temp/src"
 echo D | xcopy /q/s/y "%src-dir%/toolkit/http" "temp/src"
 
 @REM  COMPITLE JAVA CODE
-javac --release 12 -d "temp/bin" -cp "%lib-dir%/*" "temp/src/*.java"
+javac -Xdiags:verbose --release 12 -d "temp/bin" -cp "%lib-dir%/*" "temp/src/*.java"
 
 @REM ZIP PROJECT INTO .jar FILE
 jar -cvf "temp/%target-name%.jar" -C "temp/bin" .
