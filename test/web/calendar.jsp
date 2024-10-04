@@ -62,7 +62,7 @@
     <calendar type="grid" id="myCalendar2" clickable editable>
         <events>
             <event start="2024-08-20" end="2024-08-25" display="background" background="red" overlap="false"> Red Zone </event>
-            <event start="2024-08-25" end="2024-08-30" display="background" background="green" group="green-zone"> Green Zone </event>
+            <event src="assets/img/img-1.jpg" start="2024-08-25" end="2024-08-30" display="background" background="green" group="green-zone"> Green Zone </event>
             <event clickable start="2024-08-15"> Red Event </event>
             <event start="2024-08-10" color="darkgreen" constraint="green-zone"> Green Event </event>
         </events>
@@ -76,12 +76,13 @@
     <p> Event <input type="text" target="myCalendar3.event" /> <input type="datetime-local" target="myCalendar3.event" /> </p>
     <p> Debut Event <input type="date" target="myCalendar3.event.start" /> <input type="datetime-local" target="myCalendar3.event.start" /> </p>
     <p> Fin Event <input type="date" target="myCalendar3.event.end" /> <input type="datetime-local" target="myCalendar3.event.end" /> </p>
-    <p> Groupe Event <input type="text" target="myCalendar3.event.group" /> <input type="datetime-local" target="myCalendar3.event.group" /> </p>
+    <p> Group Event <input type="text" target="myCalendar3.event.group" /> <input type="datetime-local" target="myCalendar3.event.group" /> </p>
+    <p> Event Name <input type="text" target="myCalendar3.event.name" /> <input type="datetime-local" target="myCalendar3.event.name" /> </p>
 
     <calendar id="myCalendar3" type="grid" track-by="time" track-over="week" event-clickable>
         <events>
             <event start="2024-08-28" all-day> Event 0 </event>
-            <event group="red-group" color="white" border="red" background="red" start="2024-08-29" end="2024-08-30"> Anniversaire de quelqu'un peut-être ? </event>
+            <event name="The red event" group="red-group" color="white" border="red" background="red" start="2024-08-29" end="2024-08-30"> Anniversaire de quelqu'un peut-être ? </event>
             <event color="red" border="red" background="white" start="2024-08-30" end="2024-08-31"> Manao auto-école ndray </event>
         </events>
     </calendar>

@@ -30,6 +30,7 @@ echo D | xcopy /q/y "%xml-dir%" "temp/WEB-INF"
 @REM COPY SOURCE FILE TO temp-src
 echo D | xcopy /q/s/y "%src-dir%/controller" "temp-src"
 echo D | xcopy /q/s/y "%src-dir%/model" "temp-src"
+echo D | xcopy /q/s/y "%src-dir%/util" "temp-src"
 
 @REM  COMPITLE JAVA CODE
 javac -parameters -d "temp/WEB-INF/classes" -cp "%lib-dir%/*" "temp-src/*.java"

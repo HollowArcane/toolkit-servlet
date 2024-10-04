@@ -15,6 +15,7 @@
 
     <style>
         .grid {
+            /* height: 500px; */
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             grid-template-rows: 600px 600px;
@@ -65,8 +66,8 @@
                 pt-border="white"
                 h:pt-background="white"
                 h:pt-border="blue"
-                img="/test/assets/img/img-3.jpg"
-                img-width="100"
+                img="/test/assets/img/img-3.png"
+                img-width="50"
             >
                 <data> 12 </data>
                 <data

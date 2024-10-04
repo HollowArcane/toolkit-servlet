@@ -1,12 +1,17 @@
 package toolkit.http;
 
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 
 import javax.servlet.http.HttpServletRequest;
+
+import toolkit.exception.ValidationException;
+import toolkit.util.FormValidation;
+import toolkit.util.Parse;
 
 public class Request
 {
@@ -18,6 +23,20 @@ public class Request
     {
         Objects.requireNonNull(request);
         this.request = request;
+    }
+
+    public HashMap<String, Object> getParameterMap()
+    {
+        HashMap<String, Object> parameters = new HashMap<>();
+        for(Enumeration<String> keys = request.getParameterNames(); keys.hasMoreElements();)
+        {
+            String key = keys.nextElement();
+            if(key.endsWith("[]"))
+            { parameters.put(key, request.getParameterValues(key)); }
+            else
+            { parameters.put(key, request.getParameter(key)); }
+        }
+        return parameters;
     }
 
     public HttpServletRequest getServletRequest()
@@ -48,10 +67,16 @@ public class Request
         }
     }
 
-    public void setErrors(HttpServletFormValidation<?> validation)
+    public void setErrors(FormValidation<?> validation)
     {
         for(Entry<String, Exception> error: validation.getErrorMap().entrySet())
         { request.setAttribute(errorPrefix + error.getKey(), error.getValue().getMessage()); }
+    }
+
+    public void setErrors(ValidationException exception)
+    {
+        for(Entry<String, String> error: exception.getErrorMessages().entrySet())
+        { request.setAttribute(errorPrefix + error.getKey(), error.getValue()); }
     }
 
     public boolean hasError(String parameter)
@@ -62,6 +87,20 @@ public class Request
 
     public Optional<Object> attribute(String key)
     { return Optional.ofNullable(request.getAttribute(key)); }
+
+    @SuppressWarnings("unchecked")
+    public <E> Optional<E> parameter(Class<E> type, String key)
+    {
+        String param = request.getParameter(key);
+        Object value = null;
+
+        try
+        { value = Parse.valueOf(type, param); }
+        catch (Exception e)
+        { value = null; }
+
+        return Optional.ofNullable((E)value);
+    }
 
     @SuppressWarnings("unchecked")
     public <E> Optional<E> attribute(Class<E> type, String key)

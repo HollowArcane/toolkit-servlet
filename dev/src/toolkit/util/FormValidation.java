@@ -1,26 +1,23 @@
-package toolkit.http;
+package toolkit.util;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 
-import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Map.Entry;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import javax.servlet.http.HttpServletRequest;
 
 import toolkit.exception.ParseException;
-import toolkit.util.Arrays;
-import toolkit.util.Parse;
-import toolkit.util.Strings;
-import toolkit.util.reflect.GenericType;
+import toolkit.exception.ValidationException;
+import toolkit.reflect.GenericType;
 
-public final class HttpServletFormValidation<E>
+public final class FormValidation<E>
 {
     private static final String[] VALID_ARRAYS = { "java.util.ArrayList", "java.util.Vector", "java.util.List", "java.util.HashSet", "java.util.Set" };
     private static final HashMap<Class<? extends Exception>, String> MESSAGES = new HashMap<>();
@@ -31,62 +28,53 @@ public final class HttpServletFormValidation<E>
     public static void setErrorMessage(Class<? extends Exception> error, String message)
     { MESSAGES.put(error, message); }
 
-    private HttpServletRequest request;
+    private HashMap<String, Object> parameters;
     private HashMap<String, Exception> errors;
     private HashMap<String, String> parameterMap;
 
-    private Consumer<HttpServletFormValidation<E>> onFail;
+    private Consumer<FormValidation<E>> onFail;
 
     private Class<E> type;
     private E model;
 
-    public HttpServletFormValidation(HttpServletRequest request)
-    {
-        Objects.requireNonNull(request);
-        
-        setErrorMessages();
-        this.request = request;
-        errors = new HashMap<>();
-        parameterMap = new HashMap<>(); 
-    }
 
-    public HttpServletFormValidation(HttpServletRequest request, Class<E> type)
+    public FormValidation(HashMap<String, Object> parameters, Class<E> type)
     {
         Objects.requireNonNull(type);
-        Objects.requireNonNull(request);
+        Objects.requireNonNull(parameters);
 
         setErrorMessages();
         this.type = type;
-        this.request = request;
+        this.parameters = parameters;
         errors = new HashMap<>();
         parameterMap = new HashMap<>(); 
     }
 
-    public HttpServletFormValidation(HttpServletRequest request, E model)
+    public FormValidation(HashMap<String, Object> parameters, E model)
     {
         Objects.requireNonNull(model);
-        Objects.requireNonNull(request);
+        Objects.requireNonNull(parameters);
 
         setErrorMessages();
         this.model = model;
-        this.request = request;
+        this.parameters = parameters;
         errors = new HashMap<>();
         parameterMap = new HashMap<>(); 
     }
 
-    public HttpServletFormValidation<E> onFail(Consumer<HttpServletFormValidation<E>> onFail)
+    public FormValidation<E> onFail(Consumer<FormValidation<E>> onFail)
     {
         this.onFail = onFail;
         return this;
     }
 
-    public HttpServletFormValidation<E> map(String parameter, String attribute)
+    public FormValidation<E> map(String parameter, String attribute)
     {
         parameterMap.put(parameter, attribute);
         return this;
     }
 
-    public HttpServletFormValidation<E> autoMap()
+    public FormValidation<E> autoMap()
     { return autoMap(str -> {
         StringBuilder builder = new StringBuilder(str.length());
         for(int i = 0; i < str.length(); i++)
@@ -99,13 +87,10 @@ public final class HttpServletFormValidation<E>
         return builder.toString();
     }); }
 
-    public HttpServletFormValidation<E> autoMap(Function<String, String> nameMapper)
+    public FormValidation<E> autoMap(Function<String, String> nameMapper)
     {
-        for(Enumeration<String> e = request.getParameterNames(); e.hasMoreElements();)
-        {
-            String next = e.nextElement();
-            map(next, nameMapper.apply(next));
-        }
+        for(String next: parameters.keySet())
+        { map(next, nameMapper.apply(next)); }
         return this;
     }
 
@@ -115,8 +100,11 @@ public final class HttpServletFormValidation<E>
     public HashMap<String, Exception> getErrorMap()
     { return errors; }
 
+    public HashMap<String, String> getErrorMessages()
+    { return Arrays.map(errors, Exception::getMessage); }
+
     public E apply()
-        throws HttpServletFormValidationException
+        throws ValidationException
     {
         errors.clear();
         if(model == null)
@@ -134,7 +122,7 @@ public final class HttpServletFormValidation<E>
         {
             if(onFail != null)
             { onFail.accept(this); }
-            throw new HttpServletFormValidationException(errors);
+            throw new ValidationException(errors);
         }
 
         return model;
@@ -147,13 +135,20 @@ public final class HttpServletFormValidation<E>
         Object value = null;
         try
         {
-            if(param.getKey().endsWith("[]") && Arrays.contains(VALID_ARRAYS, f.getType().getName()))
+            Object parameter = parameters.get(param.getKey());
+            if(parameter instanceof String[])
             {
-                if(setValues(f, request.getParameterValues(param.getKey())))
+                if(Arrays.contains(VALID_ARRAYS, f.getType().getName()) && setValues(f, (String[])parameter))
                 { return; }
+                if(f.getType().isArray())
+                { value = Parse.valueOfArray((Class<?>)f.getType().getComponentType(), (String[])parameter); }
+                else
+                { value = Parse.valueOf(f.getType(), String.valueOf(parameters.get(param.getKey()))); }
             }
-        
-            value = setValue(param.getKey(), f);
+            else
+            { value = Parse.valueOf(f.getType(), String.valueOf(parameter)); }
+    
+            setValue(param.getKey(), f, value);
         }
         catch (NoSuchMethodException p)
         {
@@ -184,17 +179,14 @@ public final class HttpServletFormValidation<E>
             Method m = Arrays.first(model.getClass().getDeclaredMethods(),
                 m0 -> m0.getName().equals("add" + Strings.ucFirst(f.getName()))
                    && m0.getParameterCount() == 1
-            );
-
-            if(m == null)
-            { throw new NoSuchMethodException(); }
+            ).orElseThrow();
 
             for(int i = 0; i < parameters.length; i++)
             { m.invoke(model, Parse.valueOf(m.getParameterTypes()[0], parameters[i])); }
             
             return true;
         }
-        catch (NoSuchMethodException e)
+        catch (NoSuchElementException e)
         { /* let collapse to the next statement */ }
         catch (IllegalAccessException | InvocationTargetException e)
         {
@@ -204,24 +196,27 @@ public final class HttpServletFormValidation<E>
         return false;
     }
 
-    private Object setValue(String param, Field field)
+    private void setValue(String param, Field field, Object value)
             throws NoSuchMethodException,
                    IllegalAccessException,
                    InvocationTargetException
-    {
-        Object value;
-
-        if(field.getType().isArray())
-        { value = Parse.valueOfArray((Class<?>)field.getType().getComponentType(), request.getParameterValues(param)); }
-        else
-        { value = Parse.valueOf(field.getType(), request.getParameter(param)); }
-
-        Method m = model.getClass().getDeclaredMethod(
-            "set" + Strings.ucFirst(field.getName()),
-            field.getType()
-        );
-        m.invoke(model, value);
-        return value;
+    { 
+        try
+        {
+            Method m = model.getClass().getDeclaredMethod(
+                "set" + Strings.ucFirst(field.getName()),
+                String.class
+            );     
+            m.invoke(model, parameters.get(param));
+        }
+        catch(NoSuchMethodException e)
+        {
+            Method m = model.getClass().getDeclaredMethod(
+                "set" + Strings.ucFirst(field.getName()),
+                field.getType()
+            );  
+            m.invoke(model, value);
+        }
     }
 
     private E generateModel()

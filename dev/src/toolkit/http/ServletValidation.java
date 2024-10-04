@@ -7,32 +7,34 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import toolkit.util.FormValidation;
+
 public class ServletValidation extends HttpServlet
 {
-    private HttpServletFormValidation<?> validation = null;
+    private FormValidation<?> validation = null;
 
     private Request request;
 
     @SuppressWarnings("unchecked")
-    public <E> HttpServletFormValidation<E> validate(Class<E> clazz)
+    public <E> FormValidation<E> validate(Class<E> clazz)
     {
         request.saveFormData();
 
-        validation = new HttpServletFormValidation<E>(request.getServletRequest(), clazz)
+        validation = new FormValidation<E>(request.getParameterMap(), clazz)
                             .autoMap()
                             .onFail(request::setErrors);
-        return (HttpServletFormValidation<E>)validation;
+        return (FormValidation<E>)validation;
     }
 
     @SuppressWarnings("unchecked")
-    public <E, T> HttpServletFormValidation<E> validate(E model)
+    public <E, T> FormValidation<E> validate(E model)
     {   
         request.saveFormData();
 
-        validation = new HttpServletFormValidation<E>(request.getServletRequest(), model)
+        validation = new FormValidation<E>(request.getParameterMap(), model)
                             .autoMap()
                             .onFail(request::setErrors);
-        return (HttpServletFormValidation<E>)validation;
+        return (FormValidation<E>)validation;
     }
 
     

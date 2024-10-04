@@ -19,10 +19,14 @@ mkdir "temp/bin"
 mkdir "temp/src"
 
 @REM COPY UTILITY FILES INTO THE PROJECT
+echo D | xcopy /q/s/y "%src-dir%/toolkit/bean" "temp/src"
 echo D | xcopy /q/s/y "%src-dir%/toolkit/http" "temp/src"
+echo D | xcopy /q/s/y "%src-dir%/toolkit/jsp" "temp/src"
+echo D | xcopy /q/s/y "%src-dir%/toolkit/util" "temp/src"
+echo D | xcopy /q/s/y "%src-dir%/toolkit/exception" "temp/src"
 
 @REM  COMPITLE JAVA CODE
-javac -Xdiags:verbose --release 12 -d "temp/bin" -cp "%lib-dir%/*" "temp/src/*.java"
+javac -Xdiags:verbose --release 12 -d "temp/bin" -cp "%lib-dir%/*" temp/src/*.java
 
 @REM ZIP PROJECT INTO .jar FILE
 jar -cvf "temp/%target-name%.jar" -C "temp/bin" .

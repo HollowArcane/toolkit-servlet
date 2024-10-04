@@ -12,11 +12,12 @@ class CalendarBuilderFactory
         'display': 'display',
         'constraint': 'constraint',
         'overlap': 'overlap',
-        'max-event': 'dayMaxEvents',
+        'max-event': 'dayMaxEvents'
     }
 
     static PROPERTIES_EX = {
-        'clickable': 'clickable'
+        'clickable': 'clickable',
+        'name': 'name'
     }
 
     static TYPES = {
@@ -159,6 +160,27 @@ class CalendarBuilder
         { return 'multiMonthYear'; }
     }
 
+    updateEventInput(clickable, id, info)
+    {
+        if(!id || !info.event || !clickable && !info.event.extendedProps.clickable)
+        { return; }
+
+        let inputs = document.querySelectorAll(`input[target="${id}.event"], input[target="${id}.event.start"]`);
+        CalendarBuilderFactory.setInputValues(inputs, CalendarBuilderFactory.formatDate(info.event.start));
+        
+        inputs = document.querySelectorAll(`input[target="${id}.event.end"]`);
+        CalendarBuilderFactory.setInputValues(inputs, CalendarBuilderFactory.formatDate(info.event.end));
+        
+        inputs = document.querySelectorAll(`input[type="text"][target="${id}.event.title"]`);
+        CalendarBuilderFactory.setInputValues(inputs, info.event.title);
+        
+        inputs = document.querySelectorAll(`input[type="text"][target="${id}.event.group"]`);
+        CalendarBuilderFactory.setInputValues(inputs, info.event.groupId);
+        
+        inputs = document.querySelectorAll(`input[type="text"][target="${id}.event.name"]`);
+        CalendarBuilderFactory.setInputValues(inputs, info.event.extendedProps.name || '');
+    }
+
     build()
     {
         const DOMevents = this.calendar.querySelectorAll('events event');
@@ -185,25 +207,8 @@ class CalendarBuilder
         const calendarInfo = {
             initialView: type,
             events: events,
-            eventClick: info => {
-                console.log('event click: ', info);
-                
-                const id = this.calendar.getAttribute('id');
-                if(!id || !info.event || !eventClickable && !info.event.extendedProps.clickable)
-                { return; }
-
-                let inputs = document.querySelectorAll(`input[target="${id}.event"], input[target="${id}.event.start"]`);
-                CalendarBuilderFactory.setInputValues(inputs, CalendarBuilderFactory.formatDate(info.event.start));
-                
-                inputs = document.querySelectorAll(`input[target="${id}.event.end"]`);
-                CalendarBuilderFactory.setInputValues(inputs, CalendarBuilderFactory.formatDate(info.event.end));
-                
-                inputs = document.querySelectorAll(`input[type="text"][target="${id}.event.title"]`);
-                CalendarBuilderFactory.setInputValues(inputs, info.event.title);
-                
-                inputs = document.querySelectorAll(`input[type="text"][target="${id}.event.group"]`);
-                CalendarBuilderFactory.setInputValues(inputs, info.event.groupId);
-            },
+            eventClick: info => this.updateEventInput(eventClickable, this.calendar.getAttribute('id'), info),
+            eventDrop: info => this.updateEventInput(eventClickable, this.calendar.getAttribute('id'), info),
             dateClick: info => {
                 if(!clickable)
                 { return; }
@@ -238,8 +243,6 @@ class CalendarBuilder
                 CalendarBuilderFactory.setInputValues(inputs, info.resource.title);
             }
         };
-
-        console.log(calendarInfo);
         
         return new FullCalendar.Calendar(this.canvas, calendarInfo);
     }
